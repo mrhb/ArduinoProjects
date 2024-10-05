@@ -153,8 +153,9 @@ void loop()
         Serial.println(message);
         previousSMSIndex = currentSMSIndex; // Update your sms index
         
-
-        bool checkSend = sim800.sendSMS("+989151575793", "salam");
+        char message[]="";
+        sprintf(message,"Hi!Temperature: %ddeg and Humidity: %d%",temperature,humidity);
+        bool checkSend = sim800.sendSMS("+989151575793", message);
         if(checkSend){
           Serial.print("message is Sended");
         }

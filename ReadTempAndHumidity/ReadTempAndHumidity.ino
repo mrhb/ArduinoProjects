@@ -15,7 +15,7 @@
 // - For Arduino: Connect the sensor to Digital I/O Pin 2.
 // - For ESP32: Connect the sensor to pin GPIO2 or P2.
 // - For ESP8266: Connect the sensor to GPIO2 or D4.
-DHT11 dht11(2);
+DHT11 dht11(4);
 
 void setup() {
     // Initialize serial communication to allow debugging and data readout.

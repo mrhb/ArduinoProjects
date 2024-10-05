@@ -345,6 +345,16 @@ bool BareBoneSim800::sendSMS(const char *number, char *text)
     if (result == ERROR)
         return false; // this just end the function here
     delay(1000);
+
+
+    gsmSerial->print("AT+CSMP=17,167,0,0\r\n"); // برای ارسال SMS انگلیسی مناسب است
+  // gsmSerial->print("AT+CSMP=17,167,0,8\r\n"); // برای ارسال SMS UNICODE مناسب است
+  // gsmSerial->print("AT+CSMP=17,167,0,16\r\n"); // _دیالوگ ذخره کردن ظاهر میشود_برای ارسال یک پیام با مدت اعتبار ۱ روز
+    result = _checkResponse(10000);
+    if (result == ERROR)
+        return false; // this just end the function here
+    delay(1000);
+
     gsmSerial->print(F("AT+CMGS=\"")); // command to send sms
     gsmSerial->print(number);
     gsmSerial->print(F("\"\r\n"));

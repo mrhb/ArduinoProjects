@@ -108,11 +108,6 @@ void setup()
     // Save the last sms
     currentSMSIndex = sim800.currentMessageIndex; // Reads the last saved sms index
     previousSMSIndex = currentSMSIndex;
-
-    //Serial.println("Ready, Send your new SMS");
-
-    Serial.println("is sending  new SMS");
-    // sim800.sendSMS("+989151575793", "salam");
 }
 
 void loop()
@@ -154,14 +149,16 @@ void loop()
         previousSMSIndex = currentSMSIndex; // Update your sms index
         
         char message[]="";
+        char mobilenumber[14];
+        sim800.lastMobileNumber.toCharArray(mobilenumber, 14);
         sprintf(message,"Hi!Temperature: %ddeg and Humidity: %d%",temperature,humidity);
-        bool checkSend = sim800.sendSMS("+989151575793", message);
+        bool checkSend = sim800.sendSMS(mobilenumber, message);
         if(checkSend){
-          Serial.print("message is Sended");
+          Serial.println("message is Sended");
         }
         else
         {
-          Serial.print("Sending Failed");
+          Serial.println("Sending Failed");
 
         }
     }

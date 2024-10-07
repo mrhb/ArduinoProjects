@@ -108,6 +108,7 @@ class BareBoneSim800
 
     volatile int previousMessageIndex = 0; // stores the last read message index
     volatile int currentMessageIndex = 0;  // stores the latest message index
+    String lastMobileNumber = "NoNUmber";  // stores the latest message index
 
     // some public function
     void begin();

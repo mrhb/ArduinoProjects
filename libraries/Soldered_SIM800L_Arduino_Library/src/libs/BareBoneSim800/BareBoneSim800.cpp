@@ -152,6 +152,7 @@ int BareBoneSim800::_getLatestMessageIndex()
     // returns 0 if nothing is found, possible for an empty simcard
     String buffer = "";
     String bufferIndex = "";
+    String bufferMobileNumber = "";
     int messageIndex = 0;
     int tempIndex = 0;
     gsmSerial->print(F("AT+CMGL=\"ALL\",0"));
@@ -164,8 +165,18 @@ int BareBoneSim800::_getLatestMessageIndex()
         // means message is found
         tempIndex = tempIndex + 6;
         bufferIndex = buffer.substring(tempIndex);
+        bufferMobileNumber=bufferIndex;
         bufferIndex = bufferIndex.substring(1, (bufferIndex.indexOf(",")));
         messageIndex = bufferIndex.toInt();
+
+
+
+
+        // extract mobile Number
+        bufferMobileNumber = bufferMobileNumber.substring(bufferMobileNumber.indexOf(",",2));
+        bufferMobileNumber = bufferMobileNumber.substring(bufferMobileNumber.indexOf(",",2));
+        bufferMobileNumber = bufferMobileNumber.substring(2,bufferMobileNumber.indexOf(",",2)+1);
+        lastMobileNumber =bufferMobileNumber;
         return messageIndex;
     }
     else

@@ -53,17 +53,17 @@ void loop() {
   Serial.println(sensorValue);
   Serial.print("Voltage:");
   currentVoltage =sensorValue;
-  currentVoltage=(currentVoltage /1023)*220;
+  currentVoltage=(currentVoltage /1023)*5;
   Serial.println(currentVoltage);
-if(currentVoltage>200 && (currentVoltage - previousVoltage)>50){
-  previousVoltage=currentVoltage;
-  Serial.println("Voltage Connected!");
-}
-else if(currentVoltage<180 && (previousVoltage - currentVoltage)> float(50)){
-  Serial.println("Voltage DisConnected!");
-  previousVoltage=currentVoltage;
-}
+// if(currentVoltage>200 && (currentVoltage - previousVoltage)>50){
+//   previousVoltage=currentVoltage;
+//   Serial.println("Voltage Connected!");
+// }
+// else if(currentVoltage<180 && (previousVoltage - currentVoltage)> float(50)){
+//   Serial.println("Voltage DisConnected!");
+//   previousVoltage=currentVoltage;
+// }
 
   // stop the program for <sensorValue> milliseconds:
-  delay(1000);
+  delay(500);
 }

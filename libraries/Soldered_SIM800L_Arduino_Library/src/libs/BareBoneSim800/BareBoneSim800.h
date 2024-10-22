@@ -72,7 +72,7 @@
 #define READY_TO_RECEIVE 10 // basically SMSGOOD means >
 #define OK               11
 
-#define DEBUG 1 // This enables debugging mode, to disable it - set value to 0
+#define DEBUG 0 // This enables debugging mode, to disable it - set value to 0
 
 
 class BareBoneSim800
@@ -106,8 +106,8 @@ class BareBoneSim800
     BareBoneSim800(int txPin, int rxPin);
     BareBoneSim800(const char *networkAPN, const char *userName, const char *passWord);
 
-    volatile int previousMessageIndex = 0; // stores the last read message index
-    volatile int currentMessageIndex = 0;  // stores the latest message index
+    volatile uint8_t previousMessageIndex = 0; // stores the last read message index
+    volatile uint8_t currentMessageIndex = 0;  // stores the latest message index
     String lastMobileNumber = "NoNUmber";  // stores the latest message index
 
     // some public function

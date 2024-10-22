@@ -31,7 +31,6 @@ void loop() {
     int humidity = 0;
 
 
-    Serial.print("AT");
     // Attempt to read the temperature and humidity values from the DHT11 sensor.
     int result = dht11.readTemperatureHumidity(temperature, humidity);
 

@@ -94,21 +94,23 @@ void setup()
 void loop()
 {
     bool checkSMS = sim800.checkNewSMS(); // Check if tehere is incoming message
+     Serial.print("currentMessageIndex: ");
+      Serial.println(sim800.currentMessageIndex);
     if (checkSMS)
     {
         Serial.println("New SMS receieved");
-        currentSMSIndex = sim800.currentMessageIndex; // Reads the last saved sms index
 
         // Lets read the sms
         message = sim800.readSMS(currentSMSIndex); // Read sms and save it in message variable
         Serial.print("Received message is: ");
-        Serial.println(message);
-        previousSMSIndex = currentSMSIndex; // Update your sms index
         
-
-        bool checkSend = sim800.sendSMS("+989151575793", "salam");
+        char msg[]="";
+        sprintf(msg,"currentMessageIndex : %d",sim800.currentMessageIndex);
+        Serial.println(msg);
+        bool checkSend = sim800.sendSMS("+989151575793", msg);
         if(checkSend){
           Serial.print("message is Sended");
+          Serial.println(message);
         }
         else
         {

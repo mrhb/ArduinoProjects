@@ -86,6 +86,11 @@ void setup()
 void loop()
 {
   currentTime = millis();
+
+  String dateTime= sim800.getTime();
+	Serial.println(dateTime);
+
+  
   tempreture();
   power();
   checkSMS();

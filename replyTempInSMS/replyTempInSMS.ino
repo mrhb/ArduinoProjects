@@ -56,20 +56,24 @@ void setup()
   while (!Serial) // Wait until serial is available
       ;
 
-  Serial.println("Initializing GSM module");
+  Serial.println("Module Is Starting.");
   delay(8000); // This delay is necessary, it helps the device to be ready and connect to a network
 
   Serial.println("Should be ready by now");
-  bool deviceAttached = sim800.isAttached(); // Check if sim800 is connected
-  if (deviceAttached)
+
+  bool deviceAttached=false;
+  while (!deviceAttached)// Check if sim800 is connected
   {
-      Serial.println("Device is Attached");
-  }
-  else
-  {
-      Serial.println("Not Attached");
-      while (1)
-          ;
+    deviceAttached = sim800.isAttached();
+    if (deviceAttached)
+    {
+        Serial.println("Device is Attached");
+        break;
+    }
+    else
+    {
+        Serial.println("Not Attached");
+    }
   }
 
   // Delete all sms in memory
@@ -165,39 +169,36 @@ void loop()
 #pragma endregion
 
 #pragma region Power    
-#define sensorPin A0   // select the input pin for the potentiometer
+  #define sensorPin A0   // select the input pin for the potentiometer
   int  sensorValue = 0;  // variable to store the value coming from the sensor
   float  currentVoltage = 220;  // variable to store the value coming from the sensor
   float  previousVoltage = 220;  // variable to store the value coming from the sensor
   void power()
   {
+    sensorValue = analogRead(sensorPin);
+    // turn the ledPin on
+    // stop the program for <sensorValue> milliseconds:
+    Serial.print("sensor:");
+    Serial.println(sensorValue);
+    Serial.print("Voltage:");
+    currentVoltage =sensorValue;
+    currentVoltage=(currentVoltage /1023)*220;
+    Serial.println(currentVoltage);
+    if(currentVoltage>200 && (currentVoltage - previousVoltage)>50){
+      previousVoltage=currentVoltage;
+      Serial.println("Voltage Connected!");
+      SMS sms = {0};
+      q.push(&sms);
+    
+    }
+    else if(currentVoltage<180 && (previousVoltage - currentVoltage)> float(50)){
+      Serial.println("Voltage DisConnected!");
+      previousVoltage=currentVoltage;
+      SMS sms = {1};
+      q.push(&sms);
+      //bool checkDisConnectedSend = sim800.sendSMS("+989151575793", "Voltage DisConnected!");
+    }
 
-  sensorValue = analogRead(sensorPin);
-  // turn the ledPin on
-  // stop the program for <sensorValue> milliseconds:
-  Serial.print("sensor:");
-  Serial.println(sensorValue);
-  Serial.print("Voltage:");
-  currentVoltage =sensorValue;
-  currentVoltage=(currentVoltage /1023)*220;
-  Serial.println(currentVoltage);
-  if(currentVoltage>200 && (currentVoltage - previousVoltage)>50){
-    previousVoltage=currentVoltage;
-    Serial.println("Voltage Connected!");
-    SMS sms = {2};
-		q.push(&sms);
-   
-  }
-  else if(currentVoltage<180 && (previousVoltage - currentVoltage)> float(50)){
-    Serial.println("Voltage DisConnected!");
-    previousVoltage=currentVoltage;
-    SMS sms = { 1};
-		q.push(&sms);
-    //bool checkDisConnectedSend = sim800.sendSMS("+989151575793", "Voltage DisConnected!");
-  }
-
-  // stop the program for <sensorValue> milliseconds:
-  delay(500);
   }
 #pragma endregion
 
@@ -214,18 +215,20 @@ void updateState()
   unsigned int i;
 
   int count =q.getCount();
+  Serial.print("count: ");
   Serial.println(count);
   if(count>0)
   {
     indicator(3);
-    for (i = 0 ; i <= count ; i++)
+    for (i = 0 ; i < count ; i++)
     {
       SMS sms;
       q.peek(&sms);
       Serial.print("cnt");Serial.print(i);Serial.print(": ");
       Serial.println(templates[sms.templateId]);
-
-      bool IsSend = sim800.sendSMS("+989151575793", "Voltage Connected!");
+      const char* message = templates[sms.templateId].c_str();
+      bool IsSend = sim800.sendSMS("+989151575793",message);
+      // delay(2000); bool IsSend=true;
       if(IsSend)
       {
         indicator(0);

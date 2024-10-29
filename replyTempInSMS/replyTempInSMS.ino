@@ -2,7 +2,13 @@
 DHT11 dht11(4); // Create an instance of the DHT11 class.
 
 
+#include <TimeLib.h>
 #include "SIM800L-SOLDERED.h" // Include soldered library sof SIM800L breakout
+#include "JDateLib.h"
+
+// Offset hours from gps time (UTC)
+const unsigned long offset = 3.5;   // Tehran Time Zone
+
 SIM800L sim800(3,2); // So connect D8 to the TX, D9 to the RX
 int previousSMSIndex = 0;
 int currentSMSIndex = 0;
@@ -39,9 +45,9 @@ typedef struct smsData {
 		uint16_t	templateId;
 } SMS;
 String  templates[3] = {
-	{ "turned on!"},
-	{ "turnd off!"},
-	{ "overheated!"}
+	{ "turned on!\r\n"},
+	{ "turnd off!\r\n"},
+	{ "overheated!\r\n"}
 };
 cppQueue	q(sizeof(SMS), 10, IMPLEMENTATION);	// Instantiate queue
 
@@ -73,12 +79,13 @@ void setup()
     else
     {
         Serial.println("Not Attached");
+        delay(100);
     }
   }
 
   // Delete all sms in memory
   sim800.dellAllSMS();
-
+  setNetworkTime();
   // Save the last sms
   currentSMSIndex = sim800.currentMessageIndex; // Reads the last saved sms index
   previousSMSIndex = currentSMSIndex;
@@ -219,19 +226,28 @@ void updateState()
   Serial.println(count);
   if(count>0)
   {
-    indicator(1);
+    indicator(4); //blink slow
     for (i = 0 ; i < count ; i++)
     {
       SMS sms;
       q.peek(&sms);
       Serial.print("cnt");Serial.print(i);Serial.print(": ");
       Serial.println(templates[sms.templateId]);
-      const char* message = templates[sms.templateId].c_str();
+      Serial.println(digitalClockString());
+      String SMS = templates[sms.templateId];
+      SMS +=digitalClockString();
+      const char* message = SMS.c_str();
       bool IsSend = sim800.sendSMS("+989151575793",message);
       // delay(2000); bool IsSend=true;
       if(IsSend)
       {
         q.drop();
+        Serial.println("sms is send");
+      }
+      else{
+        Serial.println("sending sms failed!");
+        indicator(1); //blink fast
+        delay(500);
       }
     }
      indicator(0);
@@ -263,4 +279,38 @@ void indicator(uint8_t state)
   }
 }
 
+
+
+void setNetworkTime(){
+
+  int Year;
+  byte Month, Day, Hour, Minute, Second;
+
+  String dateTime= sim800.getTime();
+  Serial.println(dateTime);
+  if(dateTime.length()<2) return;
+
+  Year=dateTime.substring(2,6).toInt();
+  Month= dateTime.substring(7,9).toInt();
+  Day=dateTime.substring(10,12).toInt();
+  Hour=dateTime.substring(13,15).toInt();
+  Minute=dateTime.substring(16,18).toInt();
+  Second=dateTime.substring(19,21).toInt();
+	
+  Date now(Year,Month,Day);
+
+  // set the Time to the latest GPS reading
+  setTime(Hour, Minute, Second, Day, Month, Year);
+  adjustTime(3.5 * SECS_PER_HOUR);
+
+}
+
+
+String digitalClockString(){
+  Date now(year(),month(),day());
+  String jdate = now.JDate();
+  char buffer[]="2014/10/23 11:7:23 ";
+  sprintf(buffer, "%s-%02d:%02d:%02d",jdate.c_str(),hour(),minute(),second());
+  return String(buffer);
+}
 // smsData messages[20];  //an array of 2 structs of type timerData

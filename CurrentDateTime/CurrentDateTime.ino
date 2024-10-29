@@ -4,8 +4,6 @@
 
 // Offset hours from gps time (UTC)
 const unsigned long offset = 3.5;   // Tehran Time Zone
-String jdate;            // Jalali Date String
-int JY,JM,JD;            // Jalali Year & Month & Day Intiger
 
 SIM800L sim800(3,2); // So connect D8 to the TX, D9 to the RX
 

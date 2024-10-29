@@ -219,7 +219,7 @@ void updateState()
   Serial.println(count);
   if(count>0)
   {
-    indicator(3);
+    indicator(1);
     for (i = 0 ; i < count ; i++)
     {
       SMS sms;
@@ -231,32 +231,36 @@ void updateState()
       // delay(2000); bool IsSend=true;
       if(IsSend)
       {
-        indicator(0);
         q.drop();
       }
     }
+     indicator(0);
   }
   else{
     indicator(0);
   }
 }
+
 void indicator(uint8_t state)
 {
   switch (state) {
-  case 0:
-    ITimer1.attachInterruptInterval(50, TimerHandler1);
-    break;
-  case 1:
-    ITimer1.attachInterruptInterval(100, TimerHandler1);
-    break;
-  case 2:
-    ITimer1.attachInterruptInterval(200, TimerHandler1);
-    break;
-  case 3:
-    ITimer1.attachInterruptInterval(300, TimerHandler1);
-    break;
+    case 0:
+      ITimer1.detachInterrupt();
+      digitalWrite(LED_BUILTIN, false);
+      break;
+    case 1:
+      ITimer1.attachInterruptInterval(50, TimerHandler1);
+      break;
+    case 2:
+      ITimer1.attachInterruptInterval(100, TimerHandler1);
+      break;
+    case 3:
+      ITimer1.attachInterruptInterval(200, TimerHandler1);
+      break;
+    case 4:
+      ITimer1.attachInterruptInterval(300, TimerHandler1);
+      break;
   }
 }
-
 
 // smsData messages[20];  //an array of 2 structs of type timerData

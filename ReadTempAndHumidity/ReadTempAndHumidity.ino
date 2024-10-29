@@ -17,13 +17,38 @@
 // - For ESP8266: Connect the sensor to GPIO2 or D4.
 DHT11 dht11(4);
 
+
+
+
+
+unsigned long currentTime;
+unsigned long tempTime;
+
+
+#define TIMER_INTERRUPT_DEBUG         0
+#define _TIMERINTERRUPT_LOGLEVEL_     0
+#define USE_TIMER_1     true 
+#include "TimerInterrupt.h"
+
+void TimerHandler1(void)
+{
+  //timer interrupt toggles pin LED_BUILTIN
+  digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+}
+
+
 void setup() {
     // Initialize serial communication to allow debugging and data readout.
     // Using a baud rate of 9600 bps.
     Serial.begin(9600);
-    
+    Serial.println("Starting dht11 Project.");
+    ITimer1.init();
+
+    pinMode(LED_BUILTIN, OUTPUT);
+    indicator(0);
     // Uncomment the line below to set a custom delay between sensor readings (in milliseconds).
-    // dht11.setDelay(500); // Set this to the desired delay. Default is 500ms.
+     dht11.setDelay(500); // Set this to the desired delay. Default is 500ms.
+    //indicator(0);
 }
 
 void loop() {
@@ -32,7 +57,12 @@ void loop() {
 
 
     // Attempt to read the temperature and humidity values from the DHT11 sensor.
+    indicator(0);
     int result = dht11.readTemperatureHumidity(temperature, humidity);
+    //int result=0;
+    indicator(1);
+    //ITimer1.reattachInterrupt(200);
+    //interrupts();
 
     // Check the results of the readings.
     // If the reading is successful, print the temperature and humidity values.
@@ -47,4 +77,27 @@ void loop() {
         // Print error message based on the error code.
         Serial.println(DHT11::getErrorString(result));
     }
+    delay(2000);
+}
+
+void indicator(uint8_t state)
+{
+  switch (state) {
+    case 0:
+      ITimer1.detachInterrupt();
+      digitalWrite(LED_BUILTIN, false);
+      break;
+    case 1:
+      ITimer1.attachInterruptInterval(50, TimerHandler1);
+      break;
+    case 2:
+      ITimer1.attachInterruptInterval(100, TimerHandler1);
+      break;
+    case 3:
+      ITimer1.attachInterruptInterval(200, TimerHandler1);
+      break;
+    case 4:
+      ITimer1.attachInterruptInterval(300, TimerHandler1);
+      break;
+  }
 }

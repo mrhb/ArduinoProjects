@@ -62,9 +62,15 @@ void sendSMSWithoutFeedback(const char message[])
 }
  
  
-
+int n=1;
+char buf[10];
 void loop()
 {
+   sendSMSWithoutFeedback("salam");
+ delay(5000);
+  sprintf(buf, "Hello!%d", n);
+  n++;
+ sendSMS(buf);
 }
 void updateSerial()
 {

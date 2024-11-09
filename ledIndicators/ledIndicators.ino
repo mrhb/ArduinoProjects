@@ -1,5 +1,5 @@
-const int powerIndicator = 17;
-const int tempretureIndicator = 18;
+const int powerIndicator = 3;
+const int tempretureIndicator = 2;
 const int smsIndicator = 19;
 void setup() {
 

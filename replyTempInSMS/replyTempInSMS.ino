@@ -1,3 +1,10 @@
+// include the library code:
+#include <LiquidCrystal.h>
+
+// Creates an LCD object. Parameters: (rs, enable, d4, d5, d6, d7)
+int rs = 7, en = 8, d4 = 9, d5 = 10, d6 = 11, d7 = 12; // قرار دادن پین ها در متغیر
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7); // پیکربندی ال سی دی
+
 #include <DHT11.h>
 DHT11 dht11(4); // Create an instance of the DHT11 class.
 
@@ -48,10 +55,10 @@ typedef struct smsData {
 } SMS;
 
 char templates[4][20] = {
-	 "turned on!\r\n",
-	 "turned off!\r\n",
-	 "overheated!\r\n",
-	 "Monitoring Started.\r\n"
+	 "turned on! ",
+	 "turned off! ",
+	 "overheated! ",
+	 "Monitoring Started. "
 };
 cppQueue	q(sizeof(SMS), 10, IMPLEMENTATION);	// Instantiate queue
 
@@ -70,6 +77,10 @@ void setup()
   digitalWrite(tempretureIndicator,HIGH);
   digitalWrite(smsIndicator,HIGH);
 
+
+ 
+
+
   currentTime = millis();
   tempTime=currentTime;
   GsmSerial.begin(9600);
@@ -77,6 +88,7 @@ void setup()
   //sim800.begin(); // Initialize sim800 module
   while (!Serial) // Wait until serial is available
       ;
+
 
   Serial.println("Module Is Starting.");
   delay(8000); // This delay is necessary, it helps the device to be ready and connect to a network
@@ -102,6 +114,9 @@ void setup()
 
   wiatuntilConnectToGSM();
 
+  lcd.begin(16,2);
+  // lcd.clear();
+  // displayData() ;
 
   // Delete all sms in memory
   //sim800.dellAllSMS();
@@ -136,9 +151,34 @@ void loop()
   Serial.println("main loop completed!1");
   updateState();
   Serial.println("main loop completed!2");
+
+  displayData();
 }
+int temperature = 0;
+int humidity = 0;
 
+int  sensorValue = 0;  // variable to store the value coming from the sensor
+float  currentVoltage = 220;  // variable to store the value coming from the sensor
+float  previousVoltage = 220;  // variable to store the value coming from the sensor
 
+void displayData() 
+{
+    // Print a message to the LCD.
+    lcd.setCursor(0, 0);
+    lcd.print(" V   Temp   Hum ");
+ 
+    char vBuffer[3];
+    dtostrf(currentVoltage,3,0, vBuffer);
+    char* dataRow="220  20C   80% ";
+    sprintf(dataRow, "%s  %2d C  %2d% ",vBuffer,temperature,humidity);
+    Serial.println("displayData");
+    Serial.println(dataRow);
+    // set the cursor to column 0, line 1
+    // (note: line 1 is the second row, since counting begins with 0):
+    lcd.setCursor(0 ,1);
+    // Print a message to the LCD.
+    lcd.print(dataRow);
+}
 #pragma region checkNewSMS
   void checkSMS()
   {
@@ -173,8 +213,6 @@ void loop()
 
 #pragma region Temperature
   #define tempPeriod 1000
-  int temperature = 0;
-  int humidity = 0;
   void tempreture()
   {
     digitalWrite(tempretureIndicator,HIGH);
@@ -212,9 +250,6 @@ void loop()
 
 #pragma region Power    
   #define sensorPin A0   // select the input pin for the potentiometer
-  int  sensorValue = 0;  // variable to store the value coming from the sensor
-  float  currentVoltage = 220;  // variable to store the value coming from the sensor
-  float  previousVoltage = 220;  // variable to store the value coming from the sensor
   void power()
   {
      digitalWrite(powerIndicator,HIGH);
@@ -293,8 +328,16 @@ void updateState()
       Serial.println(message);
       // bool IsSend = sim800.sendSMS("+989151575793",message);
       // delay(2000); bool IsSend=true;
+
+      char vBuffer[3];
+      dtostrf(currentVoltage,3,0, vBuffer);
+      char* dataRow="220  20C   80% ";
+      sprintf(dataRow, " %sVolt  %2dDeg  %2d% ",vBuffer,temperature,humidity);
+      strcat (message,dataRow);
+
       bool IsSend = sendSMS(message);
-      if(IsSend)
+      // if(IsSend)
+      if(true)
       {
         q.drop();
         Serial.println("sms is send");

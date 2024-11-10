@@ -54,11 +54,17 @@ typedef struct smsData {
     unsigned long   dateTime;
 } SMS;
 
-char templates[4][20] = {
-	 "turned on! ",
-	 "turned off! ",
-	 "overheated! ",
-	 "Monitoring Started. "
+
+char templates[9][20] = {
+	 "turned onn! ",//0
+	 "turned off! ",//1
+	 "overheated! ",//2
+	 "Monitoring Started. ", //3
+	 "over first! ",//4
+	 "below first! ",//5
+	 "over second! ",//6
+	 "below second! ",//7
+	 "I'm alive. "//8
 };
 cppQueue	q(sizeof(SMS), 10, IMPLEMENTATION);	// Instantiate queue
 
@@ -147,14 +153,18 @@ void loop()
   
   power();
   tempreture();
+  
   checkSMS();
   Serial.println("main loop completed!1");
+
+  //aliveness();
   updateState();
   Serial.println("main loop completed!2");
 
   displayData();
 }
 int temperature = 0;
+int previousTemperature = 0;
 int humidity = 0;
 
 int  sensorValue = 0;  // variable to store the value coming from the sensor
@@ -211,6 +221,30 @@ void displayData()
   }
 #pragma endregion
 
+
+
+// #pragma region aliveness
+// #define alivenessPeriod 4*3600*1000 //4hours
+// unsigned long alivenessTime;
+// void aliveness()
+// {
+//   Serial.println("read tempreture started!");
+//   if ( currentTime - alivenessTime < alivenessPeriod )  //test whether the period has elapsed
+//   {
+//     return;
+//   }
+//   else {
+//     alivenessTime = currentTime;  //IMPORTANT to save the start time of the current LED state.
+    
+//     SMS sms = {};
+//     sms.templateId=8;
+//     sms.dateTime=now();
+//     q.push(&sms);
+//   }
+
+// }
+// #pragma endregion //aliveness
+
 #pragma region Temperature
   #define tempPeriod 1000
   void tempreture()
@@ -245,6 +279,58 @@ void displayData()
     Serial.println("read tempreture completed!");
     delay(1000);
     digitalWrite(tempretureIndicator,LOW);
+    TempEvaluation();
+  }
+#define firstThresholdUpper 30
+#define firstThresholdLower 27
+
+#define secondThresholdUpper 35
+#define secondThresholdLower 32
+  void TempEvaluation()
+  {
+      Serial.println("Temperature Evaluation started!");
+    // //First threshold
+    if(temperature>firstThresholdUpper && (temperature - previousTemperature)>1){
+      previousTemperature=temperature;
+      // Serial.println("over first threshold temperature! ");
+      SMS sms = {};
+      sms.templateId=4;
+      sms.dateTime=now();
+      q.push(&sms);
+    
+    }
+    else if(temperature<firstThresholdLower && (previousTemperature - temperature)> 1){
+      // Serial.println("below first threshold temperaturer! ");
+      previousTemperature=temperature;
+      SMS sms = {};
+      sms.templateId=5;
+      sms.dateTime=now();
+      q.push(&sms);
+      //bool checkDisConnectedSend = sim800.sendSMS("+989151575793", "Voltage DisConnected!");
+    }
+
+
+    //Second threshold
+    if(temperature>secondThresholdUpper && (temperature - previousTemperature)>1){
+      previousTemperature=temperature;
+      // Serial.println("over second threshold temperature! ");
+      SMS sms = {};
+      sms.templateId=6;
+      sms.dateTime=now();
+      q.push(&sms);
+    
+    }
+    else if(temperature<secondThresholdLower && (previousTemperature - temperature)> 1){
+      // Serial.println("below second threshold temperaturer! ");
+      previousTemperature=temperature;
+      SMS sms = {};
+      sms.templateId=7;
+      sms.dateTime=now();
+      q.push(&sms);
+      //bool checkDisConnectedSend = sim800.sendSMS("+989151575793", "Voltage DisConnected!");
+    }
+
+    Serial.println("Temperature Evaluation completed!");
   }
 #pragma endregion //Temperature
 
@@ -293,12 +379,6 @@ void displayData()
 #pragma endregion
 
 
-SMS tab[3] = {
-	{ 0 },
-	{ 1 },
-	{ 2 }
-};
-
 
 void updateState()
 {
@@ -312,6 +392,7 @@ void updateState()
   if(count>0)
   {
     indicator(4); //blink slow
+    
     for (i = 0 ; i < count ; i++)
     {
       Serial.println("updateState complete! 001");
@@ -321,9 +402,10 @@ void updateState()
       //Serial.println("cnt");//Serial.println(i);//Serial.println(": ");
       // Serial.println(templates[sms.templateId]);
       // Serial.println(sms.dateTime);
-
-      char message[200];
-      strcpy (message,templates[sms.templateId]);
+      char message[200]="";
+      // sprintf(message, "%d: %s", i,templates[sms.templateId]);
+      // strcat(message, templates[sms.templateId]);
+      strncpy (message,templates[sms.templateId],20);
       strcat (message,digitalClockString(sms.dateTime));
       Serial.println(message);
       // bool IsSend = sim800.sendSMS("+989151575793",message);
@@ -332,7 +414,7 @@ void updateState()
       char vBuffer[3];
       dtostrf(currentVoltage,3,0, vBuffer);
       char* dataRow="220  20C   80% ";
-      sprintf(dataRow, " %sVolt  %2dDeg  %2d% ",vBuffer,temperature,humidity);
+      sprintf(dataRow, " %sVolt  %2dDeg  %2d%% ",vBuffer,temperature,humidity);
       strcat (message,dataRow);
 
       bool IsSend = sendSMS(message);

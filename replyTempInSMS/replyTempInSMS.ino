@@ -66,6 +66,12 @@ char templates[9][20] = {
 	 "below second! ",//7
 	 "I'm alive. "//8
 };
+
+char Numbers[2][13] = {
+	 "+989151575793",//0
+	 //"+989151575793",//0
+	 "+989361855278",//1
+};
 cppQueue	q(sizeof(SMS), 10, IMPLEMENTATION);	// Instantiate queue
 
 const int powerIndicator = 17;
@@ -166,7 +172,8 @@ void loop()
 int temperature = 0;
 int previousTemperature = 0;
 int humidity = 0;
-
+bool isIncreasing_first = true;
+bool isIncreasing_second = true;
 int  sensorValue = 0;  // variable to store the value coming from the sensor
 float  currentVoltage = 220;  // variable to store the value coming from the sensor
 float  previousVoltage = 220;  // variable to store the value coming from the sensor
@@ -286,11 +293,13 @@ void displayData()
 
 #define secondThresholdUpper 35
 #define secondThresholdLower 32
+
   void TempEvaluation()
   {
       Serial.println("Temperature Evaluation started!");
     // //First threshold
-    if(temperature>firstThresholdUpper && (temperature - previousTemperature)>1){
+    if(isIncreasing_first && temperature>firstThresholdUpper && (temperature - previousTemperature)>1){
+      isIncreasing_first =false;
       previousTemperature=temperature;
       // Serial.println("over first threshold temperature! ");
       SMS sms = {};
@@ -299,7 +308,8 @@ void displayData()
       q.push(&sms);
     
     }
-    else if(temperature<firstThresholdLower && (previousTemperature - temperature)> 1){
+    else if(!isIncreasing_first && temperature<firstThresholdLower && (previousTemperature - temperature)> 1){
+      isIncreasing_first = true; 
       // Serial.println("below first threshold temperaturer! ");
       previousTemperature=temperature;
       SMS sms = {};
@@ -311,7 +321,8 @@ void displayData()
 
 
     //Second threshold
-    if(temperature>secondThresholdUpper && (temperature - previousTemperature)>1){
+    if(isIncreasing_second && temperature>secondThresholdUpper && (temperature - previousTemperature)>1){
+      isIncreasing_second = false;      
       previousTemperature=temperature;
       // Serial.println("over second threshold temperature! ");
       SMS sms = {};
@@ -320,7 +331,8 @@ void displayData()
       q.push(&sms);
     
     }
-    else if(temperature<secondThresholdLower && (previousTemperature - temperature)> 1){
+    else if(!isIncreasing_second && temperature<secondThresholdLower && (previousTemperature - temperature)> 1){
+      isIncreasing_second = true;
       // Serial.println("below second threshold temperaturer! ");
       previousTemperature=temperature;
       SMS sms = {};
@@ -416,14 +428,19 @@ void updateState()
       char* dataRow="220  20C   80% ";
       sprintf(dataRow, " %sVolt  %2dDeg  %2d%% ",vBuffer,temperature,humidity);
       strcat (message,dataRow);
+      char mobileNumber[13]="";
+      strncpy (mobileNumber,Numbers[0],13);
+      bool IsSend = sendSMS(message,mobileNumber);
 
-      bool IsSend = sendSMS(message);
-      // if(IsSend)
-      if(true)
+      strncpy (mobileNumber,Numbers[1],13);
+      IsSend = sendSMS(message,mobileNumber);
+
+     if(true)
       {
         q.drop();
         Serial.println("sms is send");
       }
+      // if(IsSend)
       else{
         Serial.println("sending sms failed!");
         indicator(1); //blink fast
@@ -511,7 +528,7 @@ char* digitalClockString(unsigned long time){
 
 
 
-bool sendSMS(const char message[])
+bool sendSMS(const char message[] , const char mobile[])
 {
   Serial.println("Is sending Sms");
   Serial.write(message);
@@ -522,7 +539,9 @@ bool sendSMS(const char message[])
   // GsmSerial.println("AT+CSMP=17,167,0,8"); // برای ارسال SMS UNICODE مناسب است
   // GsmSerial.println("AT+CSMP=17,167,0,16"); // _دیالوگ ذخره کردن ظاهر میشود_برای ارسال یک پیام با مدت اعتبار ۱ روز
   delay(500);//updateSerial(); 
-  GsmSerial.println("AT+CMGS=\"+989151575793\"\r");//change ZZ with country code and xxxxxxxxxxx with phone number to sms
+  GsmSerial.print("AT+CMGS=\"");//change ZZ with country code and xxxxxxxxxxx with phone number to sms
+  GsmSerial.print(mobile);//change ZZ with country code and xxxxxxxxxxx with phone number to sms
+  GsmSerial.println("\"\r");//change ZZ with country code and xxxxxxxxxxx with phone number to sms
   
   delay(500);//updateSerial(); 
   GsmSerial.println(message); //text content
